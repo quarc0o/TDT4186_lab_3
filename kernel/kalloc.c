@@ -44,6 +44,7 @@ void freerange(void *pa_start, void *pa_end)
 
     for (; p + PGSIZE <= (char *)pa_end; p += PGSIZE)
     {
+        // Set the reference  count to 1
         reference_count[(uint64) p / PGSIZE] = 1;
         kfree(p);
     }
@@ -53,7 +54,7 @@ void increment_refcount(uint64 pa) {
     int pn = pa / PGSIZE;
     acquire(&kmem.lock);
     if (pa >= PHYSTOP || reference_count[pn] < 1) {
-        panic("incref");
+        panic("increment_refcount");
     }
     reference_count[pn]++;
     release(&kmem.lock);
@@ -75,14 +76,14 @@ void kfree(void *pa)
 
     acquire(&kmem.lock);
     int pn = (uint64) pa / PGSIZE;
-    if (1 > reference_count[pn]) {
-        panic("kfree: ref");
+    if (reference_count[pn] < 1) {
+        panic("kfree");
     }
     reference_count[pn]--;
-    int tmp = reference_count[pn];
+    int temp = reference_count[pn];
     release(&kmem.lock);
 
-    if (0 < tmp) {
+    if (0 < temp) {
         return;
     }
 
@@ -110,11 +111,12 @@ kalloc(void)
     acquire(&kmem.lock);
     r = kmem.freelist;
     if (r) {
-    kmem.freelist = r->next;
-    int pn = (uint64) r / PGSIZE;
-    if (0 != reference_count[pn]) {
-        panic("kalloc: ref");
-    }
+        kmem.freelist = r->next;
+        int pn = (uint64) r / PGSIZE;
+        // Check that refcount is not 0
+        if (reference_count[pn] != 0) {
+            panic("kalloc");
+        }
         reference_count[pn] = 1;
     } 
     release(&kmem.lock);

@@ -343,9 +343,9 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
-    *pte &= ~PTE_W;
+    *pte &= ~PTE_W; // Set flag
     flags = PTE_FLAGS(*pte);
-    increment_refcount(pa);
+    increment_refcount(pa); // increment reference
 
     if(mappages(new, i, PGSIZE, pa, flags) != 0){
       goto err;
@@ -381,20 +381,12 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 
   while(len > 0){
     va0 = PGROUNDDOWN(dstva);
+    pte_t* pte = walk(pagetable, va0, 0);
+    pa0 = PTE2PA(*pte);
     if(va0 >= MAXVA)
       return -1;
     
-    pte_t* pte = walk(pagetable, va0, 0);
-    if (0 == pte || 0 == (*pte & PTE_V) || 0 == (*pte & PTE_U)) {
-      return -1;
-    }
 
-    if (0 == (*pte & PTE_W)) {
-      if (0 > cowfault(pagetable, va0)) {
-        return -1;
-      }
-    }
-    pa0 = PTE2PA(*pte);
 
     n = PGSIZE - (dstva - va0);
     if(n > len)

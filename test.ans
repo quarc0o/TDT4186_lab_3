@@ -36,16 +36,16 @@ riscv64-unknown-elf-objdump -S kernel/kernel > kernel/kernel.asm
 riscv64-unknown-elf-objdump -t kernel/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > kernel/kernel.sym
 == Test [MANDATORY] vatopa exists == 
 $ make qemu-gdb
-[MANDATORY] vatopa exists: [32mOK[0m (3.2s) 
+[MANDATORY] vatopa exists: [32mOK[0m (4.9s) 
 == Test [MANDATORY] vatopa 0 == 
 $ make qemu-gdb
-[MANDATORY] vatopa 0: [31mFAIL[0m (0.8s) 
+[MANDATORY] vatopa 0: [31mFAIL[0m (0.5s) 
     ...
          init: starting sh
          $ vatopa 0
          No pid supplied pid
          Physical from userspace: 0x87F42000
-         $ qemu-system-riscv64: terminating on signal 15 from pid 77534 (<unknown process>)
+         $ qemu-system-riscv64: terminating on signal 15 from pid 89071 (<unknown process>)
     [31mMISSING[0m '^0x[0-9a-fA-F]{8}$'
     QEMU output saved to xv6.out.
 == Test [MANDATORY] vatopa 0 1 matches == 
@@ -56,37 +56,37 @@ $ make qemu-gdb
          $ vatopa 0 1
          No pid supplied pid
          Physical from userspace: 0x87F54000
-         $ qemu-system-riscv64: terminating on signal 15 from pid 77557 (<unknown process>)
+         $ qemu-system-riscv64: terminating on signal 15 from pid 89095 (<unknown process>)
     [31mMISSING[0m '^0x([0-9a-fA-F]{8})$'
     [31mMISSING[0m '^0x([0-9a-fA-F]{8})$'
     QEMU output saved to xv6.out.
 == Test [MANDATORY] cowtest no crash == 
 $ make qemu-gdb
-[MANDATORY] cowtest no crash: [32mOK[0m (6.3s) 
+[MANDATORY] cowtest no crash: [32mOK[0m (6.5s) 
     (Old xv6.out. failure log removed)
 == Test [MANDATORY] cowtest 1 match addresses == 
 $ make qemu-gdb
 [32m			Matching OK[0m
 [32m			Matching OK[0m
-[MANDATORY] cowtest 1 match addresses: [32mOK[0m (5.6s) 
+[MANDATORY] cowtest 1 match addresses: [32mOK[0m (6.2s) 
 == Test [MANDATORY] cowtest 2 match addresses == 
 $ make qemu-gdb
 [32m			Matching OK[0m
 [32m			Matching OK[0m
 [32m			Matching OK[0m
-[MANDATORY] cowtest 2 match addresses: [32mOK[0m (5.6s) 
+[MANDATORY] cowtest 2 match addresses: [32mOK[0m (5.8s) 
 == Test [MANDATORY] cowtest 3 match addresses == 
 $ make qemu-gdb
 [32m			Matching OK[0m
 [32m			Matching OK[0m
 [32m			Matching OK[0m
 [32m			Matching OK[0m
-[MANDATORY] cowtest 3 match addresses: [32mOK[0m (5.6s) 
+[MANDATORY] cowtest 3 match addresses: [32mOK[0m (5.8s) 
 == Test [MANDATORY] cowtest 4 match addresses == 
 $ make qemu-gdb
 [32m			Matching OK[0m
 [32m			Matching OK[0m
-[MANDATORY] cowtest 4 match addresses: [31mFAIL[0m (5.6s) 
+[MANDATORY] cowtest 4 match addresses: [31mFAIL[0m (5.8s) 
     [31mRESULT NOT MATCHED[0m
     0
     0

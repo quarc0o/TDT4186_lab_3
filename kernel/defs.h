@@ -160,7 +160,7 @@ void trapinit(void);
 void trapinithart(void);
 extern struct spinlock tickslock;
 void usertrapret(void);
-int cowfault(pagetable_t, uint64);
+int handle_page_fault(pagetable_t, uint64);
 
 // uart.c
 void uartinit(void);
