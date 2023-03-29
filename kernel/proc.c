@@ -379,7 +379,8 @@ int fork(void)
         return -1;
     }
 
-    // Copy user memory from parent to child.
+    // CHANGED THIS LINE
+    // Now uses newly created uvmshare func instead of uvmcopy on fork
     if (uvmshare(p->pagetable, np->pagetable, p->sz) < 0)
     {
         freeproc(np);

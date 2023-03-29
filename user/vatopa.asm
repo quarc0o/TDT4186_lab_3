@@ -24,10 +24,9 @@ int main(int argc, char *argv[]) {
    e:	4785                	li	a5,1
   10:	04a7d363          	bge	a5,a0,56 <main+0x56>
         printf("Usage: %s virtual_address [pid]\n", argv[0]);
-    }
-
+    } else {
         int pid = atoi(argv[1]);
-  14:	6488                	ld	a0,8(s1)
+  14:	6588                	ld	a0,8(a1)
   16:	00000097          	auipc	ra,0x0
   1a:	1e0080e7          	jalr	480(ra) # 1f6 <atoi>
   1e:	892a                	mv	s2,a0
@@ -43,11 +42,14 @@ int main(int argc, char *argv[]) {
   2e:	00000097          	auipc	ra,0x0
   32:	37a080e7          	jalr	890(ra) # 3a8 <va2pa>
   36:	85aa                	mv	a1,a0
-        printf("Physical from userspace: 0x%x\n", pa);
+        printf("0x%x\n", pa);
   38:	00001517          	auipc	a0,0x1
   3c:	81050513          	addi	a0,a0,-2032 # 848 <malloc+0x110>
   40:	00000097          	auipc	ra,0x0
   44:	640080e7          	jalr	1600(ra) # 680 <printf>
+    } 
+    
+        
     return 1;
   48:	4505                	li	a0,1
   4a:	60e2                	ld	ra,24(sp)
@@ -62,7 +64,7 @@ int main(int argc, char *argv[]) {
   5c:	7c850513          	addi	a0,a0,1992 # 820 <malloc+0xe8>
   60:	00000097          	auipc	ra,0x0
   64:	620080e7          	jalr	1568(ra) # 680 <printf>
-  68:	b775                	j	14 <main+0x14>
+  68:	b7c5                	j	48 <main+0x48>
 
 000000000000006a <_main>:
 //
@@ -824,7 +826,7 @@ printint(int fd, int xx, int base, int sgn)
     buf[i++] = digits[x % base];
  3fa:	2601                	sext.w	a2,a2
  3fc:	00000517          	auipc	a0,0x0
- 400:	4cc50513          	addi	a0,a0,1228 # 8c8 <digits>
+ 400:	4b450513          	addi	a0,a0,1204 # 8b0 <digits>
  404:	883a                	mv	a6,a4
  406:	2705                	addiw	a4,a4,1
  408:	02c5f7bb          	remuw	a5,a1,a2
@@ -949,7 +951,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  4f8:	10eb6f63          	bltu	s6,a4,616 <vprintf+0x190>
  4fc:	00271793          	slli	a5,a4,0x2
  500:	00000717          	auipc	a4,0x0
- 504:	37070713          	addi	a4,a4,880 # 870 <malloc+0x138>
+ 504:	35870713          	addi	a4,a4,856 # 858 <malloc+0x120>
  508:	97ba                	add	a5,a5,a4
  50a:	439c                	lw	a5,0(a5)
  50c:	97ba                	add	a5,a5,a4
@@ -1011,7 +1013,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  588:	4941                	li	s2,16
     putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
  58a:	00000b97          	auipc	s7,0x0
- 58e:	33eb8b93          	addi	s7,s7,830 # 8c8 <digits>
+ 58e:	326b8b93          	addi	s7,s7,806 # 8b0 <digits>
  592:	03c9d793          	srli	a5,s3,0x3c
  596:	97de                	add	a5,a5,s7
  598:	0007c583          	lbu	a1,0(a5)
@@ -1051,7 +1053,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  5dc:	b5fd                	j	4ca <vprintf+0x44>
           s = "(null)";
  5de:	00000917          	auipc	s2,0x0
- 5e2:	28a90913          	addi	s2,s2,650 # 868 <malloc+0x130>
+ 5e2:	27290913          	addi	s2,s2,626 # 850 <malloc+0x118>
         while(*s != 0){
  5e6:	02800593          	li	a1,40
  5ea:	bff1                	j	5c6 <vprintf+0x140>

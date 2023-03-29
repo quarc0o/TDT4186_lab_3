@@ -123,12 +123,13 @@ uint64 sys_va2pa(void)
     int pid = 0;
     uint64 va = 0;
     
-    argint(0, &pid);
-    argaddr(1, &va);
+    argint(1, &pid);
+    argaddr(0, &va);
 
     struct proc *p;
     int pidExists = 0;
 
+    // Check if we supplied a PID
     if (pid != 0) {
         for (p = proc; p < &proc[NPROC]; p++) {
             acquire(&p->lock);
@@ -143,21 +144,19 @@ uint64 sys_va2pa(void)
             return 0;
         }
     } else {
-        printf("No pid supplied pid\n");
+        // Create new proc if one does not exist with specified PID
         p = myproc();
     }
 
-
+    // Find the VA
     pagetable_t pagetable = p->pagetable;
     uint64 pa = walkaddr(pagetable, va);
-    //pa |= (0xFFF & va);
 
     if (pa == 0) {
         return 0;
     } else {
         return pa;
     }
-
     return 0;
 }
 
