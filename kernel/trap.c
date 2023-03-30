@@ -65,13 +65,11 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if (r_scause() == 15) {
+    handle_page_fault(p->pagetable, r_stval());
   } else if((which_dev = devintr()) != 0){
     // ok
-  } else if (r_scause() == 0xf) {
-     if (0 > handle_page_fault(p->pagetable, r_stval())) {
-       p->killed = 1;
-     }
-  } else {
+  }  else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
     setkilled(p);
@@ -223,32 +221,17 @@ devintr()
   }
 }
 
-int
+void
  handle_page_fault(pagetable_t pagetable, uint64 va)
  {
-   if (va >= MAXVA) {
-    printf("Virtual adress too large (from handle_page_fault)");
-    return -1;
-   }
-
    pte_t* pte = walk(pagetable, va, 0);
-   if (pte == 0) {
-    printf("Error getting page table entry (from handle_page_fault)");
-    return -1;
-   }
+   uint64 old = PTE2PA(*pte);
+   uint64 new = (uint64) kalloc();
+   memmove((void*) new, (void*) old, PGSIZE);
+   kfree((void*) old);
 
-   uint64 pa1 = PTE2PA(*pte);
-   uint64 pa2 = (uint64) kalloc();
-   if (pa2 == 0) {
-     printf("kalloc in handle_page_fault failed\n");
-     return -1;
-   }
-
-   memmove((void*) pa2, (void*) pa1, PGSIZE);
-   kfree((void*) pa1);
-
-   *pte = PA2PTE(pa2) | PTE_V | PTE_U | PTE_R | PTE_W | PTE_X;
-
-   return 0;
+  // Flags
+  uint64 flags = PTE_V | PTE_U | PTE_R | PTE_W | PTE_X;
+  *pte = PA2PTE(new) | flags;
  }
 

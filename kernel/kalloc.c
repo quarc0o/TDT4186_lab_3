@@ -12,6 +12,7 @@
 uint64 MAX_PAGES = 0;
 uint64 FREE_PAGES = 0;
 
+
 void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
@@ -28,7 +29,7 @@ struct
     struct run *freelist;
 } kmem;
 
-int reference_count[PHYSTOP / PGSIZE];
+static uint32 ref_count[PHYSTOP / PGSIZE];
 
 void kinit()
 {
@@ -45,19 +46,30 @@ void freerange(void *pa_start, void *pa_end)
     for (; p + PGSIZE <= (char *)pa_end; p += PGSIZE)
     {
         // Set the reference  count to 1
-        reference_count[(uint64) p / PGSIZE] = 1;
+        ref_count[(uint64) p / PGSIZE] = 1;
         kfree(p);
     }
 }
 
+// Keep track of refcount
 void increment_refcount(uint64 pa) {
     int page_num = pa / PGSIZE;
     acquire(&kmem.lock);
-    if (pa >= PHYSTOP || reference_count[page_num] < 1) {
-        panic("increment_refcount");
-    }
-    reference_count[page_num]++;
+    ref_count[page_num]++;
     release(&kmem.lock);
+}
+
+int decrement_refcount(uint64 pa) {
+    int page_num = pa / PGSIZE;
+    acquire(&kmem.lock);
+    ref_count[page_num]--;
+    release(&kmem.lock);
+
+    // Check if we have refs still
+    if (ref_count[page_num] > 0) {
+        return 1;
+    }
+    return 0;
 }
 
 // Free the page of physical memory pointed at by pa,
@@ -74,17 +86,9 @@ void kfree(void *pa)
         panic("kfree");
     }
 
-    acquire(&kmem.lock);
-    int page_num = (uint64) pa / PGSIZE;
-    if (reference_count[page_num] < 1) {
-        panic("kfree");
-    }
-
-    reference_count[page_num]--;
-    int temp = reference_count[page_num];
-    release(&kmem.lock);
-
-    if (temp > 0) {
+    // We check if we still have some references to the page before continuing
+    // If page has refs, we return, otherwise we continue to free it
+    if (decrement_refcount((uint64) pa) > 0) {
         return;
     }
 
@@ -113,12 +117,10 @@ kalloc(void)
     r = kmem.freelist;
     if (r) {
         kmem.freelist = r->next;
+
+        // We set the refcount for the page to one when allocating
         int page_num = (uint64) r / PGSIZE;
-        // Check that refcount is not 0
-        if (reference_count[page_num] != 0) {
-            panic("kalloc");
-        }
-        reference_count[page_num] = 1;
+        ref_count[page_num] = 1;
     } 
     release(&kmem.lock);
 

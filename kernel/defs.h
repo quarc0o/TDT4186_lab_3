@@ -160,7 +160,7 @@ void trapinit(void);
 void trapinithart(void);
 extern struct spinlock tickslock;
 void usertrapret(void);
-int handle_page_fault(pagetable_t, uint64);
+void handle_page_fault(pagetable_t, uint64);
 
 // uart.c
 void uartinit(void);
@@ -189,6 +189,7 @@ int copyout(pagetable_t, uint64, char *, uint64);
 int copyin(pagetable_t, char *, uint64, uint64);
 int copyinstr(pagetable_t, char *, uint64, uint64);
 void increment_refcount(uint64);
+int decrement_refcount(uint64);
 
 // plic.c
 void plicinit(void);

@@ -49,7 +49,6 @@ int main(int argc, char *argv[]) {
   44:	640080e7          	jalr	1600(ra) # 680 <printf>
     } 
     
-        
     return 1;
   48:	4505                	li	a0,1
   4a:	60e2                	ld	ra,24(sp)

@@ -5,6 +5,7 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
 
 /*
  * the kernel's page table.
@@ -14,6 +15,9 @@ pagetable_t kernel_pagetable;
 extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
+
+
+
 
 // Make a direct-map page table for the kernel.
 pagetable_t
@@ -332,10 +336,13 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 }
 
+int test_count[PHYSTOP / PGSIZE];
+
 int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
   pte_t *pte;
   uint64 pa, i;
   uint flags;
+  //struct spinlock lock;
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
@@ -345,8 +352,14 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
     pa = PTE2PA(*pte);
     *pte &= ~PTE_W; // Set flag
     flags = PTE_FLAGS(*pte);
-    increment_refcount(pa); // increment reference
+    increment_refcount(pa); 
 
+    /* int page_num = pa / PGSIZE;
+    acquire(&lock);
+
+    test_count[page_num]++;
+    release(&lock);
+ */
     if(mappages(new, i, PGSIZE, pa, flags) != 0){
       goto err;
     }
@@ -381,13 +394,9 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 
   while(len > 0){
     va0 = PGROUNDDOWN(dstva);
-    pte_t* pte = walk(pagetable, va0, 0);
-    pa0 = PTE2PA(*pte);
-    if(va0 >= MAXVA)
+    pa0 = walkaddr(pagetable, va0);
+    if(pa0 == 0)
       return -1;
-    
-
-
     n = PGSIZE - (dstva - va0);
     if(n > len)
       n = len;
