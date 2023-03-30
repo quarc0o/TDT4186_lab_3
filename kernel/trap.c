@@ -66,7 +66,18 @@ usertrap(void)
 
     syscall();
   } else if (r_scause() == 15) {
-    handle_page_fault(p->pagetable, r_stval());
+    uint64 va = r_stval();
+
+    // Find the PTE for the faulting virtual address
+    pte_t* pte = walk(p->pagetable, va, 0);
+    uint64 new_page = (uint64) kalloc();
+    uint64 old_page = (uint64) PTE2PA(*pte);
+    memmove((void*) new_page, (void*) old_page, PGSIZE);
+    *pte = PA2PTE(new_page) | PTE_V | PTE_U | PTE_W;
+    kfree((void*) old_page);
+  
+
+
   } else if((which_dev = devintr()) != 0){
     // ok
   }  else {
@@ -75,7 +86,7 @@ usertrap(void)
     setkilled(p);
   }
 
-  if(killed(p))
+  if(killed(p)) 
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
@@ -84,6 +95,7 @@ usertrap(void)
 
   usertrapret();
 }
+
 
 //
 // return to user space
@@ -221,17 +233,4 @@ devintr()
   }
 }
 
-void
- handle_page_fault(pagetable_t pagetable, uint64 va)
- {
-   pte_t* pte = walk(pagetable, va, 0);
-   uint64 old = PTE2PA(*pte);
-   uint64 new = (uint64) kalloc();
-   memmove((void*) new, (void*) old, PGSIZE);
-   kfree((void*) old);
-
-  // Flags
-  uint64 flags = PTE_V | PTE_U | PTE_R | PTE_W | PTE_X;
-  *pte = PA2PTE(new) | flags;
- }
 

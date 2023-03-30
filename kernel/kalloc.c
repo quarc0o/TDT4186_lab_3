@@ -29,6 +29,7 @@ struct
     struct run *freelist;
 } kmem;
 
+//static int num_pages = PHYSTOP / PGSIZE;
 static uint32 ref_count[PHYSTOP / PGSIZE];
 
 void kinit()
@@ -45,8 +46,6 @@ void freerange(void *pa_start, void *pa_end)
 
     for (; p + PGSIZE <= (char *)pa_end; p += PGSIZE)
     {
-        // Set the reference  count to 1
-        ref_count[(uint64) p / PGSIZE] = 1;
         kfree(p);
     }
 }
@@ -68,6 +67,7 @@ int decrement_refcount(uint64 pa) {
         return 1;
     }
     return 0;
+    
 }
 
 
@@ -118,8 +118,6 @@ kalloc(void)
     if (r) {
         kmem.freelist = r->next;
         
-        // We set the refcount for the page to one when allocating
-        ref_count[(uint64) r / PGSIZE] = 1;
     } 
     release(&kmem.lock);
 

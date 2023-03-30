@@ -336,7 +336,6 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 }
 
-int test_count[PHYSTOP / PGSIZE];
 
 int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
   pte_t *pte;
