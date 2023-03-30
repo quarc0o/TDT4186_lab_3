@@ -12,7 +12,6 @@
 uint64 MAX_PAGES = 0;
 uint64 FREE_PAGES = 0;
 
-
 void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
@@ -29,8 +28,6 @@ struct
     struct run *freelist;
 } kmem;
 
-static uint32 ref_count[PHYSTOP / PGSIZE];
-
 void kinit()
 {
     initlock(&kmem.lock, "kmem");
@@ -42,35 +39,11 @@ void freerange(void *pa_start, void *pa_end)
 {
     char *p;
     p = (char *)PGROUNDUP((uint64)pa_start);
-
     for (; p + PGSIZE <= (char *)pa_end; p += PGSIZE)
     {
-        // Set the reference  count to 1
-        ref_count[(uint64) p / PGSIZE] = 1;
         kfree(p);
     }
 }
-
-// Keep track of refcount
-void increment_refcount(uint64 pa) {
-    acquire(&kmem.lock);
-    ref_count[pa / PGSIZE]++;
-    release(&kmem.lock);
-}
-
-int decrement_refcount(uint64 pa) {
-    acquire(&kmem.lock);
-    ref_count[pa / PGSIZE]--;
-    release(&kmem.lock);
-
-    // Check if we have refs still
-    if (ref_count[pa / PGSIZE] > 0) {
-        return 1;
-    }
-    return 0;
-}
-
-
 
 // Free the page of physical memory pointed at by pa,
 // which normally should have been returned by a
@@ -82,15 +55,8 @@ void kfree(void *pa)
         assert(FREE_PAGES < MAX_PAGES);
     struct run *r;
 
-    if (((uint64)pa % PGSIZE) != 0 || (char *)pa < end || (uint64)pa >= PHYSTOP) {
+    if (((uint64)pa % PGSIZE) != 0 || (char *)pa < end || (uint64)pa >= PHYSTOP)
         panic("kfree");
-    }
-
-    // We check if we still have some references to the page before continuing
-    // If page has refs, we return, otherwise we continue to free it
-    if (decrement_refcount((uint64) pa) > 0) {
-        return;
-    }
 
     // Fill with junk to catch dangling refs.
     memset(pa, 1, PGSIZE);
@@ -115,12 +81,8 @@ kalloc(void)
 
     acquire(&kmem.lock);
     r = kmem.freelist;
-    if (r) {
+    if (r)
         kmem.freelist = r->next;
-        
-        // We set the refcount for the page to one when allocating
-        ref_count[(uint64) r / PGSIZE] = 1;
-    } 
     release(&kmem.lock);
 
     if (r)

@@ -5,7 +5,6 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
-#include "spinlock.h"
 
 /*
  * the kernel's page table.
@@ -15,9 +14,6 @@ pagetable_t kernel_pagetable;
 extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
-
-
-
 
 // Make a direct-map page table for the kernel.
 pagetable_t
@@ -326,39 +322,6 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
     memmove(mem, (char*)pa, PGSIZE);
     if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
       kfree(mem);
-      goto err;
-    }
-  }
-  return 0;
-
- err:
-  uvmunmap(new, 0, i / PGSIZE, 1);
-  return -1;
-}
-
-int test_count[PHYSTOP / PGSIZE];
-
-int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
-  pte_t *pte;
-  uint64 pa, i;
-  uint flags;
-  //struct spinlock lock;
-
-  for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walk(old, i, 0)) == 0)
-      panic("uvmcopy: pte should exist");
-    if((*pte & PTE_V) == 0)
-      panic("uvmcopy: page not present");
-    pa = PTE2PA(*pte);
-    // Remove write permission flag
-    *pte = (*pte & (~PTE_W));
-
-    flags = PTE_FLAGS(*pte);
-
-    // Increment the refcount
-    increment_refcount(pa); 
-
-    if(mappages(new, i, PGSIZE, pa, flags) != 0){
       goto err;
     }
   }

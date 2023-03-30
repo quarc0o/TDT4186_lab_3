@@ -160,7 +160,6 @@ void trapinit(void);
 void trapinithart(void);
 extern struct spinlock tickslock;
 void usertrapret(void);
-void handle_page_fault(pagetable_t, uint64);
 
 // uart.c
 void uartinit(void);
@@ -179,7 +178,6 @@ void uvmfirst(pagetable_t, uchar *, uint);
 uint64 uvmalloc(pagetable_t, uint64, uint64, int);
 uint64 uvmdealloc(pagetable_t, uint64, uint64);
 int uvmcopy(pagetable_t, pagetable_t, uint64);
-int uvmshare(pagetable_t, pagetable_t, uint64);
 void uvmfree(pagetable_t, uint64);
 void uvmunmap(pagetable_t, uint64, uint64, int);
 void uvmclear(pagetable_t, uint64);
@@ -188,8 +186,6 @@ uint64 walkaddr(pagetable_t, uint64);
 int copyout(pagetable_t, uint64, char *, uint64);
 int copyin(pagetable_t, char *, uint64, uint64);
 int copyinstr(pagetable_t, char *, uint64, uint64);
-void increment_refcount(uint64);
-int decrement_refcount(uint64);
 
 // plic.c
 void plicinit(void);
