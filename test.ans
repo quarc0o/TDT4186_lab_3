@@ -36,17 +36,26 @@ riscv64-unknown-elf-objdump -S kernel/kernel > kernel/kernel.asm
 riscv64-unknown-elf-objdump -t kernel/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > kernel/kernel.sym
 == Test [MANDATORY] vatopa exists == 
 $ make qemu-gdb
-[MANDATORY] vatopa exists: [32mOK[0m (2.9s) 
+Timeout! [MANDATORY] vatopa exists: [31mFAIL[0m (34.8s) 
+    ...
+         xv6 kernel is booting
+         
+         kernel/kalloc.c@kalloc:115
+         panic: assert failed
+         qemu-system-riscv64: terminating on signal 15 from pid 89537 (<unknown process>)
+    [31mMISSING[0m 'Usage\: vatopa virtual_address \[pid\]'
+    QEMU output saved to xv6.out.
 == Test [MANDATORY] vatopa 0 == 
 $ make qemu-gdb
 [MANDATORY] vatopa 0: [32mOK[0m (0.6s) 
+    (Old xv6.out. failure log removed)
 == Test [MANDATORY] vatopa 0 1 matches == 
 $ make qemu-gdb
 [32m			Matching OK[0m
-[MANDATORY] vatopa 0 1 matches: [32mOK[0m (1.0s) 
+[MANDATORY] vatopa 0 1 matches: [32mOK[0m (0.6s) 
 == Test [MANDATORY] cowtest no crash == 
 $ make qemu-gdb
-[MANDATORY] cowtest no crash: [32mOK[0m (6.2s) 
+[MANDATORY] cowtest no crash: [32mOK[0m (6.3s) 
 == Test [MANDATORY] cowtest 1 match addresses == 
 $ make qemu-gdb
 [32m			Matching OK[0m
@@ -57,7 +66,7 @@ $ make qemu-gdb
 [32m			Matching OK[0m
 [32m			Matching OK[0m
 [32m			Matching OK[0m
-[MANDATORY] cowtest 2 match addresses: [32mOK[0m (5.5s) 
+[MANDATORY] cowtest 2 match addresses: [32mOK[0m (5.6s) 
 == Test [MANDATORY] cowtest 3 match addresses == 
 $ make qemu-gdb
 [32m			Matching OK[0m
@@ -74,4 +83,4 @@ $ make qemu-gdb
 [32m			Matching OK[0m
 [32m			Matching OK[0m
 [MANDATORY] cowtest 4 match addresses: [32mOK[0m (5.7s) 
-Passed 8 out of 8 tests
+Passed 7 out of 8 tests

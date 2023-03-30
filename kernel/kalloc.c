@@ -53,24 +53,24 @@ void freerange(void *pa_start, void *pa_end)
 
 // Keep track of refcount
 void increment_refcount(uint64 pa) {
-    int page_num = pa / PGSIZE;
     acquire(&kmem.lock);
-    ref_count[page_num]++;
+    ref_count[pa / PGSIZE]++;
     release(&kmem.lock);
 }
 
 int decrement_refcount(uint64 pa) {
-    int page_num = pa / PGSIZE;
     acquire(&kmem.lock);
-    ref_count[page_num]--;
+    ref_count[pa / PGSIZE]--;
     release(&kmem.lock);
 
     // Check if we have refs still
-    if (ref_count[page_num] > 0) {
+    if (ref_count[pa / PGSIZE] > 0) {
         return 1;
     }
     return 0;
 }
+
+
 
 // Free the page of physical memory pointed at by pa,
 // which normally should have been returned by a
@@ -117,10 +117,9 @@ kalloc(void)
     r = kmem.freelist;
     if (r) {
         kmem.freelist = r->next;
-
+        
         // We set the refcount for the page to one when allocating
-        int page_num = (uint64) r / PGSIZE;
-        ref_count[page_num] = 1;
+        ref_count[(uint64) r / PGSIZE] = 1;
     } 
     release(&kmem.lock);
 

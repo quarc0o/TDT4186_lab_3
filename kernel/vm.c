@@ -350,16 +350,14 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
-    *pte &= ~PTE_W; // Set flag
+    // Remove write permission flag
+    *pte = (*pte & (~PTE_W));
+
     flags = PTE_FLAGS(*pte);
+
+    // Increment the refcount
     increment_refcount(pa); 
 
-    /* int page_num = pa / PGSIZE;
-    acquire(&lock);
-
-    test_count[page_num]++;
-    release(&lock);
- */
     if(mappages(new, i, PGSIZE, pa, flags) != 0){
       goto err;
     }

@@ -1458,7 +1458,7 @@ void kfree(void *pa)
     80000ae8:	6105                	addi	sp,sp,32
     80000aea:	8082                	ret
         assert(FREE_PAGES < MAX_PAGES);
-    80000aec:	05200693          	li	a3,82
+    80000aec:	05400693          	li	a3,84
     80000af0:	00007617          	auipc	a2,0x7
     80000af4:	51860613          	addi	a2,a2,1304 # 80008008 <__func__.1>
     80000af8:	00007597          	auipc	a1,0x7
@@ -1663,7 +1663,7 @@ kalloc(void)
     80000ca4:	6105                	addi	sp,sp,32
     80000ca6:	8082                	ret
     assert(FREE_PAGES > 0);
-    80000ca8:	07100693          	li	a3,113
+    80000ca8:	07300693          	li	a3,115
     80000cac:	00007617          	auipc	a2,0x7
     80000cb0:	35460613          	addi	a2,a2,852 # 80008000 <etext>
     80000cb4:	00007597          	auipc	a1,0x7
@@ -3358,19 +3358,19 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
     pa = PTE2PA(*pte);
     80001816:	00a75993          	srli	s3,a4,0xa
     8000181a:	09b2                	slli	s3,s3,0xc
-    *pte &= ~PTE_W; // Set flag
+    // Remove write permission flag
+    *pte = (*pte & (~PTE_W));
     8000181c:	ffb77493          	andi	s1,a4,-5
     80001820:	e104                	sd	s1,0(a0)
+
     flags = PTE_FLAGS(*pte);
+
+    // Increment the refcount
     increment_refcount(pa); 
     80001822:	854e                	mv	a0,s3
     80001824:	fffff097          	auipc	ra,0xfffff
     80001828:	1d2080e7          	jalr	466(ra) # 800009f6 <increment_refcount>
-    acquire(&lock);
 
-    test_count[page_num]++;
-    release(&lock);
- */
     if(mappages(new, i, PGSIZE, pa, flags) != 0){
     8000182c:	3fb4f713          	andi	a4,s1,1019
     80001830:	86ce                	mv	a3,s3
